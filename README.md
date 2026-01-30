@@ -308,4 +308,4 @@ MIT License - Detaylı bilgi için [LICENSE](LICENSE) dosyasına bakın.
 
 ---
 
-Made with ❤️ by [Rahat Fatura](https://github.com/Rahat-Fatura)
+Made with ❤️ by [RahatSistem](https://github.com/Rahat-Fatura)
