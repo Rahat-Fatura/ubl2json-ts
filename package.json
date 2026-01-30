@@ -1,0 +1,71 @@
+{
+  "name": "ubl2json-ts",
+  "version": "1.0.0",
+  "description": "Türkiye e-Belge sistemi için kullanılan UBLTR XML formatındaki belgelerin JSON objesine dönüştürülmesi için kullanılan modern TypeScript kütüphanesi.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "typecheck": "tsc --noEmit",
+    "test:invoice": "tsx scripts/test-invoice.ts",
+    "test:despatch": "tsx scripts/test-despatch.ts",
+    "prepublish": "yarn build && yarn test:run",
+    "publish:npm": "yarn prepublish && npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rahat-Fatura/ubl2json-ts.git"
+  },
+  "keywords": [
+    "ubl",
+    "xml",
+    "ubltr",
+    "json",
+    "xmltojson",
+    "ubltojson",
+    "tr",
+    "ebelge",
+    "efatura",
+    "earsiv",
+    "eirsaliye",
+    "typescript"
+  ],
+  "author": "Berkay Gökçe <berkaygkc7@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Rahat-Fatura/ubl2json-ts/issues"
+  },
+  "homepage": "https://github.com/Rahat-Fatura/ubl2json-ts#readme",
+  "dependencies": {
+    "fast-xml-parser": "^4.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

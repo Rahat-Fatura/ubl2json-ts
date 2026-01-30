@@ -1,0 +1,44 @@
+# Kaynak dosyalar (sadece dist yayınlanacak)
+src/
+scripts/
+tsconfig.json
+tsup.config.ts
+
+# Test dosyaları
+**/__tests__/
+*.test.ts
+*.spec.ts
+vitest.config.ts
+
+# Geliştirme dosyaları
+.eslintrc*
+eslint.config.*
+.prettierrc*
+.editorconfig
+
+# Git ve CI dosyaları
+.git/
+.github/
+.gitignore
+
+# IDE dosyaları
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
+
+# Diğer
+coverage/
+*.log
+*.tsbuildinfo
+node_modules/
+yarn.lock
+package-lock.json
+
+# Dokümantasyon (sadece README npm'de kalacak)
+DESPATCH_STRATEGY.md
+CHANGELOG.md

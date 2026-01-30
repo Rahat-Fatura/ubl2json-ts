@@ -1,0 +1,3 @@
+# Bu klasör test XML dosyaları için ayrılmıştır.
+# XML dosyaları gizli veriler içerebileceği için .gitignore'da hariç tutulmuştur.
+# Test etmek için bu klasöre örnek fatura XML'leri ekleyin.
