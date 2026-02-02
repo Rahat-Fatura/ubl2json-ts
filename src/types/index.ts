@@ -7,6 +7,30 @@
 // Enum Definitions
 // ============================================================================
 
+/** Invoice ProfileID değerleri */
+export enum InvoiceProfileId {
+  TICARIFATURA = 'TICARIFATURA',
+  TEMELFATURA = 'TEMELFATURA',
+  YOLCUBERABERFATURA = 'YOLCUBERABERFATURA',
+  IHRACAT = 'IHRACAT',
+  OZELFATURA = 'OZELFATURA',
+  KAMU = 'KAMU',
+  HKS = 'HKS',
+  ILAC_TIBBICIHAZ = 'ILAC_TIBBICIHAZ',
+}
+
+/** Invoice TypeCode değerleri */
+export enum InvoiceTypeCode {
+  SATIS = 'SATIS',
+  IADE = 'IADE',
+  TEVKIFAT = 'TEVKIFAT',
+  ISTISNA = 'ISTISNA',
+  OZELMATRAH = 'OZELMATRAH',
+  IHRACKAYITLI = 'IHRACKAYITLI',
+  SGK = 'SGK',
+  KOMISYONCU = 'KOMISYONCU',
+}
+
 /** Despatch ProfileID değerleri */
 export enum DespatchProfileId {
   TEMELIRSALIYE = 'TEMELIRSALIYE',

@@ -1,6 +1,6 @@
 {
   "name": "ubl2json-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Türkiye e-Belge sistemi için kullanılan UBLTR XML formatındaki belgelerin JSON objesine dönüştürülmesi için kullanılan modern TypeScript kütüphanesi.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
