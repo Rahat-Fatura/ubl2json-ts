@@ -5,15 +5,20 @@ import {
   setDefaults,
   normalizeTaxSubtotals,
   normalizeTaxTotals,
+  normalizeAllowanceCharges,
   normalizeLines,
   normalizeParty,
 } from '../utils/normalizers';
 import type {
   ParsedXmlRoot,
   RawInvoice,
+  RawBillingReference,
+  RawPeriod,
   Invoice,
   InvoiceConverterOptions,
   DespatchReference,
+  BillingReference,
+  InvoicePeriod,
   PaymentMeans,
   AdditionalDocumentReference,
 } from '../types';
@@ -104,6 +109,8 @@ export class InvoiceConverter {
       notes: this.extractNotes(json.Note),
       despatches: this.extractDespatches(json.DespatchDocumentReference),
       order: this.extractOrderReference(json.OrderReference),
+      billingReferences: this.extractBillingReferences(json.BillingReference),
+      invoicePeriod: this.extractInvoicePeriod(json.InvoicePeriod),
       paymentMeans: this.extractPaymentMeans(json.PaymentMeans),
       additionalDocumentReference: this.extractAdditionalDocuments(
         json.AdditionalDocumentReference
@@ -130,6 +137,7 @@ export class InvoiceConverter {
       allowanceTotal: json.LegalMonetaryTotal.AllowanceTotalAmount?.val ?? 0,
       chargeTotal: json.LegalMonetaryTotal.ChargeTotalAmount?.val ?? 0,
       payableAmount: json.LegalMonetaryTotal.PayableAmount?.val ?? 0,
+      allowanceCharges: normalizeAllowanceCharges(json.AllowanceCharge),
       lines,
     };
 
@@ -206,6 +214,43 @@ export class InvoiceConverter {
     return {
       id: order.ID?.val,
       date: order.IssueDate?.val,
+    };
+  }
+
+  /**
+   * İADE atfı: BillingReference/InvoiceDocumentReference listesini extract eder
+   */
+  private extractBillingReferences(
+    refs: RawBillingReference[] | undefined
+  ): BillingReference[] {
+    if (!Array.isArray(refs)) {
+      return [];
+    }
+    return refs.map((ref): BillingReference => {
+      const docRef = ref.InvoiceDocumentReference;
+      return {
+        id: docRef?.ID?.val,
+        date: docRef?.IssueDate?.val,
+        documentTypeCode: docRef?.DocumentTypeCode?.val,
+        documentDescription: docRef?.DocumentDescription?.[0]?.val,
+      };
+    });
+  }
+
+  /**
+   * Fatura dönemini (cac:InvoicePeriod) extract eder
+   */
+  private extractInvoicePeriod(
+    period: RawPeriod | undefined
+  ): InvoicePeriod | null {
+    if (!period) {
+      return null;
+    }
+    return {
+      startDate: period.StartDate?.val,
+      endDate: period.EndDate?.val,
+      durationMeasure: period.DurationMeasure?.val,
+      durationUnit: period.DurationMeasure?.unitCode,
     };
   }
 

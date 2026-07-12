@@ -144,6 +144,7 @@ export interface RawCustomerParty {
 export interface RawTaxCategory {
   TaxScheme?: RawTaxScheme;
   TaxExemptionReasonCode?: XmlValue;
+  TaxExemptionReason?: XmlValue;
 }
 
 /** Raw Tax Subtotal from XML */
@@ -254,6 +255,29 @@ export interface RawOrderReference {
   IssueDate?: XmlValue;
 }
 
+/** Raw Invoice Document Reference from XML (BillingReference içi) */
+export interface RawInvoiceDocumentReference {
+  ID?: XmlValue;
+  IssueDate?: XmlValue;
+  DocumentTypeCode?: XmlValue;
+  DocumentDescription?: XmlValue[];
+}
+
+/** Raw Billing Reference from XML (İADE faturasının atıf yaptığı fatura) */
+export interface RawBillingReference {
+  InvoiceDocumentReference?: RawInvoiceDocumentReference;
+}
+
+/** Raw Period from XML (InvoicePeriod) */
+export interface RawPeriod {
+  StartDate?: XmlValue;
+  StartTime?: XmlValue;
+  EndDate?: XmlValue;
+  EndTime?: XmlValue;
+  DurationMeasure?: XmlQuantity;
+  Description?: XmlValue[];
+}
+
 /** Raw Financial Account from XML */
 export interface RawFinancialAccount {
   ID?: XmlValue;
@@ -299,6 +323,8 @@ export interface RawInvoice {
   IssueDate: XmlValue;
   IssueTime?: XmlValue;
   Note?: XmlValue[];
+  InvoicePeriod?: RawPeriod;
+  BillingReference?: RawBillingReference[];
   DespatchDocumentReference?: RawDespatchDocumentReference[];
   OrderReference?: RawOrderReference;
   PaymentMeans?: RawPaymentMeans[];
@@ -308,6 +334,7 @@ export interface RawInvoice {
   AccountingSupplierParty: RawCustomerParty;
   AccountingCustomerParty: RawCustomerParty;
   BuyerCustomerParty?: RawCustomerParty;
+  AllowanceCharge?: RawAllowanceCharge[];
   TaxTotal: RawTaxTotal[];
   WithholdingTaxTotal?: RawTaxTotal[];
   LegalMonetaryTotal: RawLegalMonetaryTotal;
@@ -452,6 +479,8 @@ export interface TaxSubtotal {
   taxable: number | undefined;
   taxableCurrency: string | undefined;
   taxExemptionReasonCode: string | undefined;
+  /** İstisna gerekçe METNİ (cbc:TaxExemptionReason; kod-alanının serbest-metin karşılığı) */
+  taxExemptionReason: string | undefined;
   amount: number | undefined;
   amountCurrency: string | undefined;
 }
@@ -565,6 +594,22 @@ export interface OrderReference {
   date: string | undefined;
 }
 
+/** Normalized billing reference (İADE faturasının atıf yaptığı fatura) */
+export interface BillingReference {
+  id: string | undefined;
+  date: string | undefined;
+  documentTypeCode: string | undefined;
+  documentDescription: string | undefined;
+}
+
+/** Normalized invoice period */
+export interface InvoicePeriod {
+  startDate: string | undefined;
+  endDate: string | undefined;
+  durationMeasure: number | undefined;
+  durationUnit: string | undefined;
+}
+
 /** Normalized payment means */
 export interface PaymentMeans {
   id: string | undefined;
@@ -604,6 +649,10 @@ export interface Invoice {
   notes: string[];
   despatches: DespatchReference[];
   order: OrderReference | null;
+  /** İADE atfı: BillingReference/InvoiceDocumentReference listesi */
+  billingReferences: BillingReference[];
+  /** Fatura dönemi (cac:InvoicePeriod); yoksa null */
+  invoicePeriod: InvoicePeriod | null;
   paymentMeans: PaymentMeans[];
   additionalDocumentReference: AdditionalDocumentReference[];
   currencyCode: string;
@@ -629,6 +678,8 @@ export interface Invoice {
   allowanceTotal: number;
   chargeTotal: number;
   payableAmount: number;
+  /** Belge-düzeyi iskonto/artırımlar (cac:AllowanceCharge) */
+  allowanceCharges: AllowanceCharge[];
   lines: InvoiceLine[];
 }
 

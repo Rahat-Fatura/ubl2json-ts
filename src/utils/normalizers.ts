@@ -46,6 +46,7 @@ export function normalizeTaxSubtotals(
     taxable: taxSub.TaxableAmount?.val,
     taxableCurrency: taxSub.TaxableAmount?.currencyID,
     taxExemptionReasonCode: taxSub.TaxCategory?.TaxExemptionReasonCode?.val,
+    taxExemptionReason: taxSub.TaxCategory?.TaxExemptionReason?.val,
     amount: taxSub.TaxAmount?.val,
     amountCurrency: taxSub.TaxAmount?.currencyID,
   }));

@@ -524,6 +524,152 @@ describe('InvoiceConverter', () => {
     });
   });
 
+  describe('yeni alanlar (billingReferences / invoicePeriod / exemptionReason / allowanceCharges)', () => {
+    const iadeXml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <UUID>test-uuid-iade</UUID>
+  <ID>IAD2024000000001</ID>
+  <ProfileID>TICARIFATURA</ProfileID>
+  <InvoiceTypeCode>IADE</InvoiceTypeCode>
+  <IssueDate>2024-02-01</IssueDate>
+  <InvoicePeriod>
+    <StartDate>2024-01-01</StartDate>
+    <EndDate>2024-01-31</EndDate>
+    <DurationMeasure unitCode="MON">1</DurationMeasure>
+  </InvoicePeriod>
+  <BillingReference>
+    <InvoiceDocumentReference>
+      <ID>ABC2024000000099</ID>
+      <IssueDate>2024-01-10</IssueDate>
+      <DocumentTypeCode>IADE</DocumentTypeCode>
+      <DocumentDescription>İade edilen fatura</DocumentDescription>
+    </InvoiceDocumentReference>
+  </BillingReference>
+  <BillingReference>
+    <InvoiceDocumentReference>
+      <ID>ABC2024000000100</ID>
+      <IssueDate>2024-01-11</IssueDate>
+    </InvoiceDocumentReference>
+  </BillingReference>
+  <DocumentCurrencyCode>TRY</DocumentCurrencyCode>
+  <AccountingSupplierParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="VKN">1234567890</ID>
+      </PartyIdentification>
+      <PartyName><Name>Test</Name></PartyName>
+      <PostalAddress><Country><Name>TR</Name></Country></PostalAddress>
+    </Party>
+  </AccountingSupplierParty>
+  <AccountingCustomerParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="VKN">0987654321</ID>
+      </PartyIdentification>
+      <PartyName><Name>Alıcı</Name></PartyName>
+      <PostalAddress><Country><Name>TR</Name></Country></PostalAddress>
+    </Party>
+  </AccountingCustomerParty>
+  <AllowanceCharge>
+    <ChargeIndicator>false</ChargeIndicator>
+    <AllowanceChargeReason>İskonto</AllowanceChargeReason>
+    <MultiplierFactorNumeric>0.10</MultiplierFactorNumeric>
+    <Amount currencyID="TRY">100.00</Amount>
+    <BaseAmount currencyID="TRY">1000.00</BaseAmount>
+  </AllowanceCharge>
+  <TaxTotal>
+    <TaxAmount currencyID="TRY">0</TaxAmount>
+    <TaxSubtotal>
+      <TaxableAmount currencyID="TRY">900.00</TaxableAmount>
+      <TaxAmount currencyID="TRY">0</TaxAmount>
+      <Percent>0</Percent>
+      <TaxCategory>
+        <TaxExemptionReasonCode>325</TaxExemptionReasonCode>
+        <TaxExemptionReason>13/a Araçların teslimi hizmetleri istisnası</TaxExemptionReason>
+        <TaxScheme>
+          <Name>KDV</Name>
+          <TaxTypeCode>0015</TaxTypeCode>
+        </TaxScheme>
+      </TaxCategory>
+    </TaxSubtotal>
+  </TaxTotal>
+  <LegalMonetaryTotal>
+    <LineExtensionAmount currencyID="TRY">1000.00</LineExtensionAmount>
+    <TaxExclusiveAmount currencyID="TRY">900.00</TaxExclusiveAmount>
+    <TaxInclusiveAmount currencyID="TRY">900.00</TaxInclusiveAmount>
+    <AllowanceTotalAmount currencyID="TRY">100.00</AllowanceTotalAmount>
+    <PayableAmount currencyID="TRY">900.00</PayableAmount>
+  </LegalMonetaryTotal>
+  <InvoiceLine>
+    <ID>1</ID>
+    <InvoicedQuantity unitCode="C62">1</InvoicedQuantity>
+    <LineExtensionAmount currencyID="TRY">1000.00</LineExtensionAmount>
+    <Item><Name>Test Ürün</Name></Item>
+    <Price><PriceAmount currencyID="TRY">1000.00</PriceAmount></Price>
+  </InvoiceLine>
+</Invoice>`;
+
+    it('billingReferences[] İADE-atfını vermeli', () => {
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(iadeXml);
+
+      expect(invoice.billingReferences).toHaveLength(2);
+      expect(invoice.billingReferences[0]).toEqual({
+        id: 'ABC2024000000099',
+        date: '2024-01-10',
+        documentTypeCode: 'IADE',
+        documentDescription: 'İade edilen fatura',
+      });
+      expect(invoice.billingReferences[1]?.id).toBe('ABC2024000000100');
+      expect(invoice.billingReferences[1]?.date).toBe('2024-01-11');
+    });
+
+    it('invoicePeriod alanlarını vermeli (yoksa null)', () => {
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(iadeXml);
+
+      expect(invoice.invoicePeriod).toEqual({
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        durationMeasure: 1,
+        durationUnit: 'MON',
+      });
+
+      // InvoicePeriod olmayan belgede null
+      const plain = converter.convert(sampleInvoiceXml);
+      expect(plain.invoicePeriod).toBeNull();
+    });
+
+    it('TaxSubtotal istisna gerekçe METNİNİ (taxExemptionReason) vermeli', () => {
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(iadeXml);
+
+      // NOT: kod-alanı fast-xml-parser sayısal-parse davranışıyla runtime'da number dönebilir
+      // (mevcut davranış — bu fix'in kapsamı dışında); String() ile karşılaştırılır.
+      expect(String(invoice.taxSubtotals[0]?.taxExemptionReasonCode)).toBe('325');
+      expect(invoice.taxSubtotals[0]?.taxExemptionReason).toBe(
+        '13/a Araçların teslimi hizmetleri istisnası'
+      );
+    });
+
+    it('belge-düzeyi allowanceCharges[] vermeli', () => {
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(iadeXml);
+
+      expect(invoice.allowanceCharges).toHaveLength(1);
+      expect(invoice.allowanceCharges[0]?.isCharge).toBe(false);
+      expect(invoice.allowanceCharges[0]?.reason).toBe('İskonto');
+      expect(invoice.allowanceCharges[0]?.multiplier).toBe(0.1);
+      expect(invoice.allowanceCharges[0]?.amount).toBe(100);
+      expect(invoice.allowanceCharges[0]?.baseAmount).toBe(1000);
+
+      // AllowanceCharge olmayan belgede boş array
+      const plain = converter.convert(sampleInvoiceXml);
+      expect(plain.allowanceCharges).toEqual([]);
+      expect(plain.billingReferences).toEqual([]);
+    });
+  });
+
   describe('updateOptions', () => {
     it('options güncellenmeli', () => {
       const converter = new InvoiceConverter();
