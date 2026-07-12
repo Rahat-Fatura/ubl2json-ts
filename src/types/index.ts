@@ -456,6 +456,13 @@ export interface TaxSubtotal {
   amountCurrency: string | undefined;
 }
 
+/** Normalized tax total — bir TaxTotal elementinin tam görünümü (çoklu-TaxTotal desteği) */
+export interface TaxTotal {
+  taxAmount: number | undefined;
+  taxAmountCurrency: string | undefined;
+  taxSubtotals: TaxSubtotal[];
+}
+
 /** Normalized allowance/charge */
 export interface AllowanceCharge {
   isCharge: boolean | undefined;
@@ -505,6 +512,8 @@ export interface InvoiceLine {
   allowances: AllowanceCharge[];
   taxTotal: number;
   taxSubtotals: TaxSubtotal[];
+  /** TÜM TaxTotal elementleri (çoklu-para dahil); mevcut taxTotal/taxSubtotals ilk-elemanı korur */
+  taxTotals: TaxTotal[];
   withholdingTaxTotal?: number;
   withholdingTaxSubtotals?: TaxSubtotal[];
   additional: LineAdditional;
@@ -613,6 +622,8 @@ export interface Invoice {
   taxInclusive: number;
   taxTotal: number;
   taxSubtotals: TaxSubtotal[];
+  /** TÜM belge-düzeyi TaxTotal elementleri (çoklu-para İHRACAT dahil); taxTotal/taxSubtotals ilk-elemanı korur */
+  taxTotals: TaxTotal[];
   withholdingTaxTotal: number;
   withholdingTaxSubtotals: TaxSubtotal[];
   allowanceTotal: number;

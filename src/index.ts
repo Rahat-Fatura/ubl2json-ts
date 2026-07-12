@@ -82,6 +82,7 @@ export type {
     ParsedDespatchXmlRoot,
     // Normalized output types
     TaxSubtotal,
+    TaxTotal,
     AllowanceCharge,
     ItemInstance,
     LineAdditional,
@@ -111,6 +112,7 @@ export type {
 export {
     setDefaults,
     normalizeTaxSubtotals,
+    normalizeTaxTotals,
     normalizeAllowanceCharges,
     normalizeLines,
     normalizeParty,

@@ -298,6 +298,121 @@ describe('InvoiceConverter', () => {
       expect(invoice.taxSubtotals[0]?.percent).toBe(18);
     });
 
+    it('tekli TaxTotal için taxTotals[] tek eleman içermeli', () => {
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(sampleInvoiceXml);
+
+      expect(invoice.taxTotals).toHaveLength(1);
+      expect(invoice.taxTotals[0]?.taxAmount).toBe(180);
+      expect(invoice.taxTotals[0]?.taxAmountCurrency).toBe('TRY');
+      expect(invoice.taxTotals[0]?.taxSubtotals).toHaveLength(1);
+
+      // Kalem-düzeyi
+      expect(invoice.lines[0]?.taxTotals).toHaveLength(1);
+      expect(invoice.lines[0]?.taxTotals[0]?.taxAmount).toBe(180);
+    });
+
+    it('çoklu TaxTotal (çift-para İHRACAT deseni) tümünü taxTotals[] ile vermeli', () => {
+      const dualCurrencyXml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <UUID>test-uuid-multi-tax</UUID>
+  <ID>IHR2024000000001</ID>
+  <ProfileID>IHRACAT</ProfileID>
+  <InvoiceTypeCode>ISTISNA</InvoiceTypeCode>
+  <IssueDate>2024-01-15</IssueDate>
+  <DocumentCurrencyCode>USD</DocumentCurrencyCode>
+  <AccountingSupplierParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="VKN">1234567890</ID>
+      </PartyIdentification>
+      <PartyName><Name>Test</Name></PartyName>
+      <PostalAddress><Country><Name>TR</Name></Country></PostalAddress>
+    </Party>
+  </AccountingSupplierParty>
+  <AccountingCustomerParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="VKN">0987654321</ID>
+      </PartyIdentification>
+      <PartyName><Name>Alıcı</Name></PartyName>
+      <PostalAddress><Country><Name>TR</Name></Country></PostalAddress>
+    </Party>
+  </AccountingCustomerParty>
+  <TaxTotal>
+    <TaxAmount currencyID="USD">0</TaxAmount>
+    <TaxSubtotal>
+      <TaxableAmount currencyID="USD">1000</TaxableAmount>
+      <TaxAmount currencyID="USD">0</TaxAmount>
+      <Percent>0</Percent>
+      <TaxCategory>
+        <TaxExemptionReasonCode>301</TaxExemptionReasonCode>
+        <TaxScheme>
+          <Name>KDV</Name>
+          <TaxTypeCode>0015</TaxTypeCode>
+        </TaxScheme>
+      </TaxCategory>
+    </TaxSubtotal>
+  </TaxTotal>
+  <TaxTotal>
+    <TaxAmount currencyID="TRY">0</TaxAmount>
+    <TaxSubtotal>
+      <TaxableAmount currencyID="TRY">32000</TaxableAmount>
+      <TaxAmount currencyID="TRY">0</TaxAmount>
+      <Percent>0</Percent>
+      <TaxCategory>
+        <TaxExemptionReasonCode>301</TaxExemptionReasonCode>
+        <TaxScheme>
+          <Name>KDV</Name>
+          <TaxTypeCode>0015</TaxTypeCode>
+        </TaxScheme>
+      </TaxCategory>
+    </TaxSubtotal>
+  </TaxTotal>
+  <LegalMonetaryTotal>
+    <LineExtensionAmount currencyID="USD">1000</LineExtensionAmount>
+    <TaxExclusiveAmount currencyID="USD">1000</TaxExclusiveAmount>
+    <TaxInclusiveAmount currencyID="USD">1000</TaxInclusiveAmount>
+    <PayableAmount currencyID="USD">1000</PayableAmount>
+  </LegalMonetaryTotal>
+  <InvoiceLine>
+    <ID>1</ID>
+    <InvoicedQuantity unitCode="C62">1</InvoicedQuantity>
+    <LineExtensionAmount currencyID="USD">1000</LineExtensionAmount>
+    <TaxTotal>
+      <TaxAmount currencyID="USD">0</TaxAmount>
+    </TaxTotal>
+    <TaxTotal>
+      <TaxAmount currencyID="TRY">0</TaxAmount>
+    </TaxTotal>
+    <Item><Name>Test Ürün</Name></Item>
+    <Price><PriceAmount currencyID="USD">1000</PriceAmount></Price>
+  </InvoiceLine>
+</Invoice>`;
+
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(dualCurrencyXml);
+
+      // Mevcut alanlar İLK TaxTotal'ı korur (geriye-uyum)
+      expect(invoice.taxTotal).toBe(0);
+      expect(invoice.taxSubtotals).toHaveLength(1);
+      expect(invoice.taxSubtotals[0]?.taxableCurrency).toBe('USD');
+
+      // Yeni taxTotals[] TÜMÜNÜ verir — ikinci para birimi artık kaybolmaz
+      expect(invoice.taxTotals).toHaveLength(2);
+      expect(invoice.taxTotals[0]?.taxAmountCurrency).toBe('USD');
+      expect(invoice.taxTotals[1]?.taxAmountCurrency).toBe('TRY');
+      expect(invoice.taxTotals[1]?.taxSubtotals[0]?.taxable).toBe(32000);
+      expect(invoice.taxTotals[1]?.taxSubtotals[0]?.taxableCurrency).toBe('TRY');
+
+      // Kalem-düzeyi çoklu TaxTotal
+      expect(invoice.lines[0]?.taxTotals).toHaveLength(2);
+      expect(invoice.lines[0]?.taxTotals[0]?.taxAmountCurrency).toBe('USD');
+      expect(invoice.lines[0]?.taxTotals[1]?.taxAmountCurrency).toBe('TRY');
+      // Kalem mevcut alanları ilk-elemanı korur
+      expect(invoice.lines[0]?.taxTotal).toBe(0);
+    });
+
     it('tutar bilgilerini doğru hesaplamalı', () => {
       const converter = new InvoiceConverter();
       const invoice = converter.convert(sampleInvoiceXml);

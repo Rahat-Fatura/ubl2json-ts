@@ -7,6 +7,7 @@ import type {
   RawPartyIdentification,
   RawItemInstance,
   TaxSubtotal,
+  TaxTotal,
   AllowanceCharge,
   InvoiceLine,
   Party,
@@ -47,6 +48,24 @@ export function normalizeTaxSubtotals(
     taxExemptionReasonCode: taxSub.TaxCategory?.TaxExemptionReasonCode?.val,
     amount: taxSub.TaxAmount?.val,
     amountCurrency: taxSub.TaxAmount?.currencyID,
+  }));
+}
+
+/**
+ * TÜM TaxTotal elementlerini normalize eder (çoklu-para desteği).
+ * Mevcut normalizeTaxSubtotals (ilk-TaxTotal) davranışı korunur; bu fonksiyon EK'tir.
+ */
+export function normalizeTaxTotals(
+  taxTotals: RawTaxTotal[] | undefined | null
+): TaxTotal[] {
+  if (!taxTotals) {
+    return [];
+  }
+
+  return taxTotals.map((taxTotal: RawTaxTotal): TaxTotal => ({
+    taxAmount: taxTotal.TaxAmount?.val,
+    taxAmountCurrency: taxTotal.TaxAmount?.currencyID,
+    taxSubtotals: normalizeTaxSubtotals(taxTotal),
   }));
 }
 
@@ -116,6 +135,7 @@ export function normalizeLines(lines: RawInvoiceLine[]): InvoiceLine[] {
       allowances: normalizeAllowanceCharges(line.AllowanceCharge),
       taxTotal: line.TaxTotal?.[0]?.TaxAmount?.val ?? 0,
       taxSubtotals: normalizeTaxSubtotals(line.TaxTotal?.[0]),
+      taxTotals: normalizeTaxTotals(line.TaxTotal),
       additional: {
         description: item?.Description?.[0]?.val ?? null,
         keyword: item?.Keyword?.val ?? null,

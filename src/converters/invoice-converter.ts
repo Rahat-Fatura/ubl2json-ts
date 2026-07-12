@@ -4,6 +4,7 @@ import { UblParseError } from '../errors/ubl-parse-error';
 import {
   setDefaults,
   normalizeTaxSubtotals,
+  normalizeTaxTotals,
   normalizeLines,
   normalizeParty,
 } from '../utils/normalizers';
@@ -123,6 +124,7 @@ export class InvoiceConverter {
       taxInclusive: json.LegalMonetaryTotal.TaxInclusiveAmount.val ?? 0,
       taxTotal: json.TaxTotal[0]?.TaxAmount?.val ?? 0,
       taxSubtotals,
+      taxTotals: normalizeTaxTotals(json.TaxTotal),
       withholdingTaxTotal: json.WithholdingTaxTotal?.[0]?.TaxAmount?.val ?? 0,
       withholdingTaxSubtotals,
       allowanceTotal: json.LegalMonetaryTotal.AllowanceTotalAmount?.val ?? 0,
