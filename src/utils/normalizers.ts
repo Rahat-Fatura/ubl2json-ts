@@ -10,6 +10,7 @@ import type {
   AllowanceCharge,
   InvoiceLine,
   Party,
+  AddressDetails,
   ItemInstance,
   AdditionalIdentifier,
   InvoiceConverterOptions,
@@ -184,6 +185,25 @@ export function normalizeParty(partyJson: RawCustomerParty): Party {
     return parts.join(' ');
   };
 
+  // Sayısal parse edilebilen yapraklar (bina no, oda, posta kodu) runtime'da number dönebilir →
+  // string'e sabitle; yoksa undefined.
+  const asString = (value: unknown): string | undefined =>
+    value === undefined || value === null ? undefined : String(value);
+
+  const buildAddressDetails = (): AddressDetails => {
+    const postal = party.PostalAddress;
+    return {
+      streetName: asString(postal?.StreetName?.val),
+      buildingName: asString(postal?.BuildingName?.val),
+      buildingNumber: asString(postal?.BuildingNumber?.[0]?.val),
+      room: asString(postal?.Room?.val),
+      citySubdivision: asString(postal?.CitySubdivisionName?.val),
+      city: asString(postal?.CityName?.val),
+      postalZone: asString(postal?.PostalZone?.val),
+      country: asString(postal?.Country?.Name?.val),
+    };
+  };
+
   const buildAdditionalIdentifiers = (): AdditionalIdentifier[] => {
     return party.PartyIdentification.filter(
       (id: RawPartyIdentification) =>
@@ -225,6 +245,7 @@ export function normalizeParty(partyJson: RawCustomerParty): Party {
     vknTckn: getVknTckn(),
     taxOffice: party.PartyTaxScheme?.TaxScheme?.Name?.val,
     address: buildAddress(),
+    addressDetails: buildAddressDetails(),
     city: party.PostalAddress?.CityName?.val,
     citySubdivision: party.PostalAddress?.CitySubdivisionName?.val,
     country: party.PostalAddress?.Country?.Name?.val,

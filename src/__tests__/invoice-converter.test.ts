@@ -204,6 +204,32 @@ describe('InvoiceConverter', () => {
       expect(invoice.receiverObject.city).toBe('Ankara');
     });
 
+    it('adres bileşenlerini yapısal addressDetails olarak vermeli (düz address korunarak)', () => {
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(sampleInvoiceXml);
+
+      // Mevcut düz-string alan bozulmadan korunur
+      expect(invoice.senderObject.address).toBe('Test Sokak Test Bina 1');
+
+      // Yeni yapısal alan
+      expect(invoice.senderObject.addressDetails).toEqual({
+        streetName: 'Test Sokak',
+        buildingName: 'Test Bina',
+        buildingNumber: '1',
+        room: undefined,
+        citySubdivision: 'Test İlçe',
+        city: 'İstanbul',
+        postalZone: undefined,
+        country: 'Türkiye',
+      });
+
+      // Sayısal parse edilen BuildingNumber string'e sabitlenmiş olmalı
+      expect(typeof invoice.senderObject.addressDetails.buildingNumber).toBe('string');
+
+      expect(invoice.receiverObject.addressDetails.streetName).toBe('Müşteri Sokak');
+      expect(invoice.receiverObject.addressDetails.city).toBe('Ankara');
+    });
+
     it('başında 0 olan vergi numaralarını string olarak korumalı', () => {
       const xmlWithLeadingZeros = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">

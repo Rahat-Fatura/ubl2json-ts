@@ -516,12 +516,25 @@ export interface AdditionalIdentifier {
   value: string | undefined;
 }
 
+/** Structured postal address components (backward-compatible addition to Party.address flat string) */
+export interface AddressDetails {
+  streetName: string | undefined;
+  buildingName: string | undefined;
+  buildingNumber: string | undefined;
+  room: string | undefined;
+  citySubdivision: string | undefined;
+  city: string | undefined;
+  postalZone: string | undefined;
+  country: string | undefined;
+}
+
 /** Normalized party */
 export interface Party {
   name: string;
   vknTckn: string | undefined;
   taxOffice: string | undefined;
   address: string;
+  addressDetails: AddressDetails;
   city: string | undefined;
   citySubdivision: string | undefined;
   country: string | undefined;

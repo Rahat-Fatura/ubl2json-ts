@@ -87,6 +87,7 @@ export type {
     LineAdditional,
     InvoiceLine,
     AdditionalIdentifier,
+    AddressDetails,
     Party,
     DespatchReference,
     OrderReference,
