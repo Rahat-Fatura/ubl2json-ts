@@ -440,6 +440,88 @@ describe('InvoiceConverter', () => {
 
       expect(invoice.notes).toContain('Test faturası notu');
     });
+
+    it('>=1000 karakter kısaltması YALNIZ base64-taşıyıcı tag\'lere uygulanmalı', () => {
+      const longNote = 'N'.repeat(1500);
+      const longBase64 = 'QUJD'.repeat(400); // 1600 char — attachment içeriği
+      const xmlWithLongLeaves = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <UUID>test-uuid-long-leaves</UUID>
+  <ID>TEST002</ID>
+  <ProfileID>TICARIFATURA</ProfileID>
+  <InvoiceTypeCode>SATIS</InvoiceTypeCode>
+  <IssueDate>2024-01-15</IssueDate>
+  <Note>${longNote}</Note>
+  <AdditionalDocumentReference>
+    <ID>REF-1</ID>
+    <IssueDate>2024-01-15</IssueDate>
+    <Attachment>
+      <EmbeddedDocumentBinaryObject mimeCode="application/xml">${longBase64}</EmbeddedDocumentBinaryObject>
+    </Attachment>
+  </AdditionalDocumentReference>
+  <AdditionalDocumentReference>
+    <ID>REF-2</ID>
+    <IssueDate>2024-01-15</IssueDate>
+    <Attachment>
+      <EmbeddedDocumentBinaryObject mimeCode="application/xml">S0lTQQ==</EmbeddedDocumentBinaryObject>
+    </Attachment>
+  </AdditionalDocumentReference>
+  <DocumentCurrencyCode>TRY</DocumentCurrencyCode>
+  <AccountingSupplierParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="VKN">1234567890</ID>
+      </PartyIdentification>
+      <PartyName><Name>Test</Name></PartyName>
+      <PostalAddress><Country><Name>TR</Name></Country></PostalAddress>
+    </Party>
+  </AccountingSupplierParty>
+  <AccountingCustomerParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="VKN">0987654321</ID>
+      </PartyIdentification>
+      <PartyName><Name>Alıcı</Name></PartyName>
+      <PostalAddress><Country><Name>TR</Name></Country></PostalAddress>
+    </Party>
+  </AccountingCustomerParty>
+  <TaxTotal>
+    <TaxAmount currencyID="TRY">0</TaxAmount>
+  </TaxTotal>
+  <LegalMonetaryTotal>
+    <LineExtensionAmount currencyID="TRY">0</LineExtensionAmount>
+    <TaxExclusiveAmount currencyID="TRY">0</TaxExclusiveAmount>
+    <TaxInclusiveAmount currencyID="TRY">0</TaxInclusiveAmount>
+  </LegalMonetaryTotal>
+  <InvoiceLine>
+    <ID>1</ID>
+    <InvoicedQuantity unitCode="C62">1</InvoicedQuantity>
+    <LineExtensionAmount currencyID="TRY">0</LineExtensionAmount>
+    <Item><Name>Test</Name></Item>
+    <Price><PriceAmount currencyID="TRY">0</PriceAmount></Price>
+  </InvoiceLine>
+</Invoice>`;
+
+      const converter = new InvoiceConverter();
+      const invoice = converter.convert(xmlWithLongLeaves);
+
+      // Uzun Note artık YANMAZ
+      expect(invoice.notes[0]).toBe(longNote);
+
+      // Gerçek attachment (>=1000 char) kısaltılmaya DEVAM eder
+      const longAttachment = invoice.additionalDocumentReference[0]?.attachment;
+      expect(
+        (longAttachment as { EmbeddedDocumentBinaryObject?: { val?: string } })
+          ?.EmbeddedDocumentBinaryObject?.val
+      ).toBe('#base64encoded');
+
+      // Kısa attachment (<1000 char) olduğu gibi kalır
+      const shortAttachment = invoice.additionalDocumentReference[1]?.attachment;
+      expect(
+        (shortAttachment as { EmbeddedDocumentBinaryObject?: { val?: string } })
+          ?.EmbeddedDocumentBinaryObject?.val
+      ).toBe('S0lTQQ==');
+    });
   });
 
   describe('updateOptions', () => {

@@ -80,6 +80,20 @@ const IGNORE_TAGS: readonly string[] = [
 const BASE64_THRESHOLD = 1000;
 
 /**
+ * Base64 içerik TAŞIYAN tag'ler (UBL 2.1 BinaryObjectType tabanlı elementler).
+ * BASE64_THRESHOLD kısaltması YALNIZ bu tag'lere uygulanır — uzun Note/serbest-metin
+ * yaprakları artık kısaltılmaz.
+ */
+const BASE64_CARRIER_TAG_NAMES: readonly string[] = [
+  'EmbeddedDocumentBinaryObject',
+  'BinaryObject',
+  'Graphic',
+  'Picture',
+  'Sound',
+  'Video',
+] as const;
+
+/**
  * fast-xml-parser için parser konfigürasyonu
  */
 export const parserOptions: X2jOptions = {
@@ -108,17 +122,27 @@ export const parserOptions: X2jOptions = {
     return tag;
   },
   tagValueProcessor: (
-    _tagName: string,
+    tagName: string,
     tagValue: string,
     _jPath: string,
     _hasAttributes: boolean,
     isLeafNode: boolean
   ): string => {
-    if (isLeafNode && tagValue.length < BASE64_THRESHOLD) {
-      return tagValue;
+    // Kısaltma yalnız gerçek base64-taşıyıcı tag'lerde (Note/serbest-metin yanmaz).
+    if (
+      isLeafNode &&
+      BASE64_CARRIER_TAG_NAMES.includes(tagName) &&
+      tagValue.length >= BASE64_THRESHOLD
+    ) {
+      return '#base64encoded';
     }
-    return '#base64encoded';
+    return tagValue;
   },
 };
 
-export { ALWAYS_ARRAY_TAG_NAMES, IGNORE_TAGS, BASE64_THRESHOLD };
+export {
+  ALWAYS_ARRAY_TAG_NAMES,
+  IGNORE_TAGS,
+  BASE64_THRESHOLD,
+  BASE64_CARRIER_TAG_NAMES,
+};
