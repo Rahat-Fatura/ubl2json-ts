@@ -21,6 +21,15 @@ import type {
 } from '../types';
 
 /**
+ * Array ise ilk elemanı, değilse kendisini döndürür.
+ * 'Shipment' ve 'Delivery' ALWAYS_ARRAY listesinde olduğundan parser bunları DAİMA array üretir;
+ * normalizeShipment eski tek-obje varsayımıyla alanları BOŞ döndürüyordu (kütüphane bug'ı).
+ */
+function firstOf<T>(value: T | T[] | undefined): T | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+/**
  * UBLTR DespatchAdvice XML'lerini JSON'a dönüştüren sınıf
  */
 export class DespatchConverter {
@@ -119,15 +128,18 @@ export class DespatchConverter {
   }
 
   /**
-   * Shipment bilgisini normalize eder
+   * Shipment bilgisini normalize eder (Shipment/Delivery array-toleranslı — ALWAYS_ARRAY uyumu)
    */
-  private normalizeShipment(shipment: RawDespatchShipment | undefined): ShipmentInfo | null {
+  private normalizeShipment(
+    shipmentInput: RawDespatchShipment | RawDespatchShipment[] | undefined
+  ): ShipmentInfo | null {
+    const shipment = firstOf(shipmentInput);
     if (!shipment) {
       return null;
     }
 
     const shipmentStage = shipment.ShipmentStage?.[0];
-    const delivery = shipment.Delivery;
+    const delivery = firstOf(shipment.Delivery);
 
     return {
       transportModeCode: shipmentStage?.TransportModeCode?.val,

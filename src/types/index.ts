@@ -407,11 +407,13 @@ export interface RawShipmentDelivery {
   Despatch?: RawDespatch;
 }
 
-/** Raw Despatch Shipment from XML */
+/** Raw Despatch Shipment from XML.
+ * NOT: 'Delivery' ALWAYS_ARRAY listesindedir — runtime'da DAİMA array gelir;
+ * union tip geriye-uyum içindir (normalizeShipment her iki şekli tolere eder). */
 export interface RawDespatchShipment {
   ID?: XmlValue;
   ShipmentStage?: RawShipmentStage[];
-  Delivery?: RawShipmentDelivery;
+  Delivery?: RawShipmentDelivery | RawShipmentDelivery[];
   TransportHandlingUnit?: unknown;
 }
 
@@ -458,7 +460,9 @@ export interface RawDespatchAdvice {
   AdditionalDocumentReference?: RawAdditionalDocumentReference[];
   DespatchSupplierParty: RawDespatchSupplierParty;
   DeliveryCustomerParty: RawDeliveryCustomerParty;
-  Shipment?: RawDespatchShipment;
+  /** 'Shipment' ALWAYS_ARRAY listesindedir — runtime'da DAİMA array gelir;
+   * union tip geriye-uyum içindir (normalizeShipment her iki şekli tolere eder). */
+  Shipment?: RawDespatchShipment | RawDespatchShipment[];
   DespatchLine: RawDespatchLine[];
 }
 
