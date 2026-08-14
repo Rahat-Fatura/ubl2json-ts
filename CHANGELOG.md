@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 (2026-08-14)
+
+### Added
+
+- **CreditNoteConverter**: UBL-TR `CreditNote` documents (e-Müstahsil Makbuzu / producer receipts) are now converted to normalized JSON, mirroring `InvoiceConverter`'s surface (`parseToRaw` / `convert`). New output type `CreditNote`, raw types `RawCreditNote` / `RawCreditNoteLine` / `ParsedCreditNoteXmlRoot`, and enums `CreditNoteProfileId` / `CreditNoteTypeCode`.
+- **Parser config**: `CreditNoteLine` added to `ALWAYS_ARRAY_TAG_NAMES`; `CreditNote.UBLExtensions` and `CreditNote.Signature` added to `IGNORE_TAGS`.
+- **Line quantity tolerance**: `normalizeLines` now reads `CreditedQuantity` when `InvoicedQuantity` is absent, so credit note lines share the `InvoiceLine` output shape.
+
+### Changed (intentional break from the legacy JS library)
+
+- No default filling on credit notes: `profileId`, `typeCode` and `currencyCode` are `undefined` when the XML omits `ProfileID` / `CreditNoteTypeCode` / `DocumentCurrencyCode` — the legacy library silently filled `EARSIVBELGE` / `MUSTAHSILMAKBUZ` / `TRY`. Absence decisions belong to the consumer's ingest layer (fail-fast philosophy).
+
 ## 1.1.0 (2026-07-12)
 
 All changes are backward-compatible additions — existing fields and behaviour are preserved.
