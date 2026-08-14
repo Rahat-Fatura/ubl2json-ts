@@ -8,6 +8,7 @@
 // Main converter classes
 export { InvoiceConverter } from "./converters/invoice-converter";
 export { DespatchConverter } from "./converters/despatch-converter";
+export { CreditNoteConverter } from "./converters/creditnote-converter";
 
 // Enums
 export {
@@ -15,6 +16,8 @@ export {
     InvoiceTypeCode,
     DespatchProfileId,
     DespatchTypeCode,
+    CreditNoteProfileId,
+    CreditNoteTypeCode,
 } from "./types";
 
 // Error classes
@@ -83,6 +86,10 @@ export type {
     RawDespatchLine,
     RawDespatchAdvice,
     ParsedDespatchXmlRoot,
+    // Raw CreditNote types
+    RawCreditNoteLine,
+    RawCreditNote,
+    ParsedCreditNoteXmlRoot,
     // Normalized output types
     TaxSubtotal,
     TaxTotal,
@@ -100,6 +107,8 @@ export type {
     PaymentMeans,
     AdditionalDocumentReference,
     Invoice,
+    // Normalized CreditNote type
+    CreditNote,
     // Normalized Despatch types
     DriverPerson,
     CarrierParty,

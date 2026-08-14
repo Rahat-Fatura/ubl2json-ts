@@ -11,7 +11,7 @@ Türkiye e-Belge sistemi için kullanılan UBLTR XML formatındaki belgelerin JS
 |------------|-------|-------|
 | **e-Fatura / e-Arşiv Fatura** | `InvoiceConverter` | ✅ Tam destek |
 | **e-İrsaliye** | `DespatchConverter` | ✅ Tam destek |
-| **e-Müstahsil** | `ReceiptConverter` | 🔜 Yakında |
+| **e-Müstahsil Makbuzu** | `CreditNoteConverter` | ✅ Tam destek |
 
 ## Özellikler
 
@@ -72,6 +72,27 @@ if (despatch.shipment) {
   console.log(despatch.shipment.driver?.firstName);  // "Ahmet"
 }
 ```
+
+### e-Müstahsil Makbuzu Dönüştürme
+
+```typescript
+import { CreditNoteConverter } from 'ubl2json-ts';
+import fs from 'fs';
+
+const converter = new CreditNoteConverter();
+const xml = fs.readFileSync('makbuz.xml', 'utf-8');
+const receipt = converter.convert(xml);
+
+console.log(receipt.number);         // "EMM2026000000001"
+console.log(receipt.typeCode);       // "MUSTAHSILMAKBUZ" (XML'de yoksa undefined — default doldurulmaz)
+console.log(receipt.senderName);     // Düzenleyen işletme
+console.log(receipt.receiverName);   // Müstahsil (çiftçi) — AccountingCustomerParty
+console.log(receipt.payableAmount);  // 308880.00 (net)
+console.log(receipt.taxSubtotals);   // Stopaj TaxTotal'da taşınır (kod "0003")
+```
+
+> **Not:** `profileId` / `typeCode` / `currencyCode` alanlarında default doldurma yoktur;
+> XML'de yoksa `undefined` döner. Yokluk kararı (ör. reddetme) tüketicinin ingest katmanına aittir.
 
 ## Detaylı Kullanım
 

@@ -43,6 +43,16 @@ export enum DespatchTypeCode {
   MATBUDAN = 'MATBUDAN',
 }
 
+/** CreditNote ProfileID değerleri (UBL-TR e-Arşiv makbuz belgeleri) */
+export enum CreditNoteProfileId {
+  EARSIVBELGE = 'EARSIVBELGE',
+}
+
+/** CreditNote TypeCode değerleri (e-Müstahsil Makbuzu) */
+export enum CreditNoteTypeCode {
+  MUSTAHSILMAKBUZ = 'MUSTAHSILMAKBUZ',
+}
+
 // ============================================================================
 // Raw XML Parser Types (fast-xml-parser tarafından üretilen ham yapı)
 // ============================================================================
@@ -344,6 +354,55 @@ export interface RawInvoice {
 /** Root parsed Invoice XML object */
 export interface ParsedInvoiceXmlRoot {
   Invoice: RawInvoice;
+}
+
+// ============================================================================
+// Raw CreditNote Types (e-Müstahsil Makbuzu — UBL CreditNote kökü)
+// ============================================================================
+
+/** Raw Credit Note Line from XML — InvoiceLine muadili; miktar CreditedQuantity'de gelir */
+export interface RawCreditNoteLine {
+  ID?: XmlValue;
+  Note?: XmlValue;
+  CreditedQuantity?: XmlQuantity;
+  LineExtensionAmount?: XmlAmount;
+  OrderLineReference?: RawOrderLineReference;
+  TaxTotal?: RawTaxTotal[];
+  WithholdingTaxTotal?: RawTaxTotal[];
+  Item: RawItem[];
+  Price: RawPrice;
+  AllowanceCharge?: RawAllowanceCharge[];
+}
+
+/** Raw Credit Note from XML.
+ * NOT: ProfileID/CreditNoteTypeCode bilinçli OPSİYONEL — kütüphane default doldurmaz,
+ * yokluk kararı tüketicinin ingest katmanına bırakılır (fail-fast felsefesi). */
+export interface RawCreditNote {
+  UUID: XmlValue;
+  ID: XmlValue;
+  ProfileID?: XmlValue;
+  CreditNoteTypeCode?: XmlValue;
+  IssueDate: XmlValue;
+  IssueTime?: XmlValue;
+  Note?: XmlValue[];
+  DocumentCurrencyCode?: XmlValue;
+  LineCountNumeric?: XmlValue<number>;
+  AdditionalDocumentReference?: RawAdditionalDocumentReference[];
+  PricingExchangeRate?: RawPricingExchangeRate;
+  AccountingSupplierParty: RawCustomerParty;
+  AccountingCustomerParty: RawCustomerParty;
+  /** cac:Delivery ALWAYS_ARRAY'dedir; içeriği şimdilik tüketilmiyor */
+  Delivery?: unknown;
+  AllowanceCharge?: RawAllowanceCharge[];
+  TaxTotal?: RawTaxTotal[];
+  WithholdingTaxTotal?: RawTaxTotal[];
+  LegalMonetaryTotal: RawLegalMonetaryTotal;
+  CreditNoteLine: RawCreditNoteLine[];
+}
+
+/** Root parsed CreditNote XML object */
+export interface ParsedCreditNoteXmlRoot {
+  CreditNote: RawCreditNote;
 }
 
 /** @deprecated Use ParsedInvoiceXmlRoot instead */
@@ -684,6 +743,46 @@ export interface Invoice {
   payableAmount: number;
   /** Belge-düzeyi iskonto/artırımlar (cac:AllowanceCharge) */
   allowanceCharges: AllowanceCharge[];
+  lines: InvoiceLine[];
+}
+
+/** Normalized credit note (e-Müstahsil Makbuzu) - Main output type.
+ * profileId/typeCode default-dolgusuz: XML'de yoksa undefined döner —
+ * eski JS-kütüphane 'EARSIVBELGE'/'MUSTAHSILMAKBUZ' doldururdu, bilinçli kırıldı. */
+export interface CreditNote {
+  uuid: string;
+  envelopeUuid: string | null;
+  number: string;
+  /** cbc:ProfileID — yoksa undefined (default-dolgu YOK) */
+  profileId: string | undefined;
+  /** cbc:CreditNoteTypeCode — yoksa undefined (default-dolgu YOK; karar tüketicinin) */
+  typeCode: string | undefined;
+  issueDatetime: Date;
+  envelopeDatetime: Date | null;
+  notes: string[];
+  additionalDocumentReference: AdditionalDocumentReference[];
+  /** cbc:DocumentCurrencyCode — yoksa undefined (default-dolgu YOK) */
+  currencyCode: string | undefined;
+  exchangeRate: number;
+  senderObject: Party;
+  senderName: string;
+  senderTax: string | undefined;
+  receiverObject: Party;
+  receiverName: string;
+  receiverTax: string | undefined;
+  lineExtension: number;
+  taxExclusive: number;
+  taxInclusive: number;
+  taxTotal: number;
+  taxSubtotals: TaxSubtotal[];
+  /** TÜM belge-düzeyi TaxTotal elementleri; taxTotal/taxSubtotals ilk-elemanı korur */
+  taxTotals: TaxTotal[];
+  withholdingTaxTotal: number;
+  withholdingTaxSubtotals: TaxSubtotal[];
+  allowanceTotal: number;
+  chargeTotal: number;
+  payableAmount: number;
+  /** Kalemler InvoiceLine şeklinde normalize edilir (miktar CreditedQuantity'den gelir) */
   lines: InvoiceLine[];
 }
 

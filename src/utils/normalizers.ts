@@ -3,6 +3,7 @@ import type {
   RawTaxSubtotal,
   RawAllowanceCharge,
   RawInvoiceLine,
+  RawCreditNoteLine,
   RawCustomerParty,
   RawPartyIdentification,
   RawItemInstance,
@@ -116,19 +117,26 @@ function normalizeItemInstances(
 }
 
 /**
- * Invoice line array'ini normalize eder
+ * Invoice/CreditNote line array'ini normalize eder.
+ * CreditNoteLine'da miktar CreditedQuantity etiketiyle gelir — her iki kaynak da tolere edilir.
  */
-export function normalizeLines(lines: RawInvoiceLine[]): InvoiceLine[] {
-  return lines.map((line: RawInvoiceLine): InvoiceLine => {
+export function normalizeLines(
+  lines: (RawInvoiceLine | RawCreditNoteLine)[]
+): InvoiceLine[] {
+  return lines.map((line: RawInvoiceLine | RawCreditNoteLine): InvoiceLine => {
     const item = line.Item[0];
     const withholdingTaxTotal = line.WithholdingTaxTotal?.[0];
+    // Miktar toleransı: InvoicedQuantity (Invoice) yoksa CreditedQuantity (CreditNote)
+    const quantity =
+      (line as RawInvoiceLine).InvoicedQuantity ??
+      (line as RawCreditNoteLine).CreditedQuantity;
 
     const baseLine: InvoiceLine = {
       id: line.ID?.val,
       name: item?.Name?.val,
       note: line.Note?.val,
-      quantity: line.InvoicedQuantity?.val ?? 0,
-      quantityUnit: line.InvoicedQuantity?.unitCode,
+      quantity: quantity?.val ?? 0,
+      quantityUnit: quantity?.unitCode,
       price: line.Price.PriceAmount?.val ?? 0,
       priceCurrency: line.Price?.PriceAmount?.currencyID,
       extensionAmount: line.LineExtensionAmount?.val ?? 0,

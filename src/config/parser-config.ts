@@ -62,6 +62,7 @@ const ALWAYS_ARRAY_TAG_NAMES: readonly string[] = [
   'RegistrationNationality',
   'PartyIdentification',
   'Response',
+  'CreditNoteLine',
 ] as const;
 
 /**
@@ -72,6 +73,8 @@ const IGNORE_TAGS: readonly string[] = [
   'Invoice.Signature',
   'DespatchAdvice.UBLExtensions',
   'DespatchAdvice.Signature',
+  'CreditNote.UBLExtensions',
+  'CreditNote.Signature',
 ] as const;
 
 /**
