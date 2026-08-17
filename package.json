@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit",
     "test:invoice": "tsx scripts/test-invoice.ts",
     "test:despatch": "tsx scripts/test-despatch.ts",
-    "prepublish": "yarn build && yarn test:run",
+    "prepublishOnly": "yarn build && yarn test:run",
     "publish:npm": "yarn prepublish && npm publish --access public"
   },
   "repository": {
